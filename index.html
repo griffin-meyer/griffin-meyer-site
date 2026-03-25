@@ -696,14 +696,26 @@
       });
     })();
 
-    // Video lightbox
+    // Video lightbox — with fallback to new tab if nested in iframe
     (function() {
       const lightbox = document.getElementById('lightbox');
       const iframe = document.getElementById('lightbox-iframe');
       const closeBtn = document.getElementById('lightbox-close');
       const cards = document.querySelectorAll('[data-video-url]');
+      const isNested = window.self !== window.top;
+
+      function embedUrlToWatch(embedUrl) {
+        // Convert youtube.com/embed/ID?autoplay=1 → youtube.com/watch?v=ID
+        const match = embedUrl.match(/embed\/([^?]+)/);
+        return match ? 'https://www.youtube.com/watch?v=' + match[1] : embedUrl;
+      }
 
       function openLightbox(url) {
+        if (isNested) {
+          // YouTube blocks iframes inside iframes — open in new tab
+          window.open(embedUrlToWatch(url), '_blank');
+          return;
+        }
         iframe.src = url;
         lightbox.classList.add('is-open');
         document.body.style.overflow = 'hidden';
